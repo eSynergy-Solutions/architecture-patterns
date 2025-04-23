@@ -29,11 +29,11 @@ architecture-patterns/
 
 The `Landing-Zones/` directory provides patterns for cloud landing zone structures. These patterns include best practices for setting up foundational cloud environments for AWS, Azure, and GCP. They cover aspects such as networking, identity, security, and governance.
 
+**Why are Landing Zones important?**
+
+Before we can deploy the architecture patterns and end-to-end solutions, it is essential to have a secure, compliant, and well-structured cloud environment. Landing Zones provide the foundational infrastructure and governance required to ensure that solutions are deployed in a scalable, secure, and compliant manner. They help organizations establish a consistent baseline for cloud environments, enabling faster and safer deployments of applications and services.
+
 ### Patterns
-
-The `Patterns/` directory contains reusable architecture patterns that address specific challenges in various domains such as AI/ML, data engineering, and software design. Each pattern includes:
-
-- **Context:** Explains when and why to use the pattern.
 - **Problem:** Describes the challenge the pattern addresses.
 - **Solution:** Provides a detailed explanation of the architecture and its components.
 - **Diagrams:** Visual representations of the architecture.
