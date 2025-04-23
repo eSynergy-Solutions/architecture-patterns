@@ -16,12 +16,15 @@ Combine vector-based document retrieval with LLM prompting to provide grounded a
 ![rag-aws](images/RAG.drawio.png)
 
 ## Components
-- **User Interface** – chat/web interface to input query
-- **Query Preprocessor** – optional normalization and rephrasing
-- **Vector Store** – FAISS, Pinecone, or Azure AI Search to store embeddings
-- **Retriever** – converts query to embedding and fetches similar documents
+### Ingestion
+- **Souce (1)** - Source data such as documents are ingested
+- **Ingestion Pipeline (2)** - This takes the source data such as documents, cleanses the data, chunks it up using a chunky strategy then converts the chunks to embeddings using an Embedding Model. The text chunk, its assoicated emeddings and additional metadata are then pushed to the Vector Database
+- **Vector Store/Database (3)** - Stores the vector embeddings and its associated metadata   
+### Agent App (5)
+- **User Query** – chat/web interface to input query
+- **Retriever and Prompt Builder** – converts query to embedding and fetches similar documents, in addition it access the appliation database to retrieve additional context (e.g. personalisation info, prompt history etc) to build the full context before passing to the LLM
 - **LLM Engine** – OpenAI, Azure OpenAI, etc., receives retrieved context + original query
-- **Prompt Builder** – constructs final prompt with context
+- **App Database** – Stores application specific information such as user details, chat history that can be used for additional context. This is used by the prompt builder to build additional context.
 
 ## Benefits
 - Domain-specific knowledge without retraining
@@ -54,6 +57,7 @@ Combine vector-based document retrieval with LLM prompting to provide grounded a
 - Vector Store: OpenSearch or Amazon Kendra or PostGres pgVector
 - LLM: Anthropic Claude via Bedrock, OpenAI
 - Flow: Lambda + API Gateway
+- GuardRails - Controls to prevent harmful content and filer out PII data
 
 ## Related Patterns
 - Semantic Search
@@ -61,12 +65,17 @@ Combine vector-based document retrieval with LLM prompting to provide grounded a
 - Knowledge Base Integration
 
 ## References
-- [Meta AI: RAG paper](https://arxiv.org/abs/2005.11401)
-- [OpenAI Cookbook: RAG](https://github.com/openai/openai-cookbook/blob/main/examples/Retrieval_augmentation.ipynb)
-- [Azure RAG Pattern](https://learn.microsoft.com/en-us/azure/architecture/example-scenario/ai/azure-rag-architecture)
+- TODO
 
-## Proof of Concepts
-- [rag-azure-openai-fastapi](https://github.com/your-org/rag-azure-openai-fastapi) – Azure OpenAI + Azure AI Search + FastAPI
-- [gcp-rag-vertexai-matchingengine](https://github.com/your-org/gcp-rag-vertexai-matchingengine) – GCP Matching Engine + Vertex AI + Streamlit
-- [aws-bedrock-rag-demo](https://github.com/your-org/aws-bedrock-rag-demo) – AWS Bedrock RAG with OpenSearch
+## Proof of Concepts(PoCs)/Accelators
+### Red-bar-Tool
+An AI assistant that extracts and answers legal questions from contracts using RAG architecture.
+- [Red-bar-tool-backend](https://github.com/eSynergy-Solutions/red-bar-tool-backend) – CloudRun, GCP Gemini with Postgres PgVector
 
+- [Red-bar-tool-frontend](https://github.com/eSynergy-Solutions/red-bar-tool-frontend) – CloudRun and GCP Gemini with Postgres PgVector
+
+- AWS - deployment TODO...
+- Azure - deployment TODO..
+- GCP - deployment
+  - [Frontend](https://github.com/eSynergy-Solutions/red-bar-tool-frontend/tree/main/iac/gcp)
+  - [Backend](https://github.com/eSynergy-Solutions/red-bar-tool-backend/tree/main/iac/gcp)

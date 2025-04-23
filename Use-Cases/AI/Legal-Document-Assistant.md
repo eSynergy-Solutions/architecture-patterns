@@ -13,9 +13,8 @@ Legal teams spend too much time searching and reviewing documents manually. Ther
 Combines document processing, embedding, retrieval, and a generative LLM to answer domain-specific questions with contextual accuracy.
 
 ## Architecture Patterns Used
-- [RAG (Retrieval-Augmented Generation)](../../AI-ML/RAG.md)
-- [Event-Driven Architecture](../../Apps/Event-Driven.md)
-- [Microservices](../../Apps/Microservices.md)
+- [RAG (Retrieval-Augmented Generation)](../../Patterns/AI-ML/RAG.md)
+- [Microservices - chat application](../../Apps/Microservices.md)
 
 ## System Diagram
 ![legal-doc-assistant-architecture](../../images/legal-doc-assistant-architecture.png)
@@ -32,8 +31,9 @@ Combines document processing, embedding, retrieval, and a generative LLM to answ
 - Cloud Run
 
 ## PoCs / Repositories
-- [rag-legal-assistant-azure](https://github.com/your-org/rag-legal-assistant-azure)
-- [vertexai-legal-rag](https://github.com/your-org/vertexai-legal-rag)
+- [Red-bar-tool-backend](https://github.com/eSynergy-Solutions/red-bar-tool-backend)
+
+- [Red-bar-tool-frontend](https://github.com/eSynergy-Solutions/red-bar-tool-frontend)
 
 ## Notes
 - Optional feedback loop for human validation
