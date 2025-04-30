@@ -1,3 +1,3 @@
-# Index
+# AI-ML Patterns
 
-Content coming soon.
+* [RAG](RAG.md)

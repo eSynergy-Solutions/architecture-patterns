@@ -1,6 +1,4 @@
-# README
-
-Architecture Patterns
+# Architecture Patterns
 
 ## Purpose
 
@@ -43,7 +41,24 @@ Before we can deploy the architecture patterns and end-to-end solutions, it is e
 
 These patterns are designed to be modular and adaptable, enabling teams to integrate them into their projects with minimal effort.
 
+### Listo f Patterns
+List of Patterns can be found here:
+* [AI-ML](./Patterns/AI-ML/Index.md)
 
 ### Use Cases
 
 The `Use-Cases/` directory demonstrates how the architecture patterns are composed to solve specific business or technical problems. Each use case provides a practical example of how to integrate multiple patterns to achieve a desired outcome.
+
+
+AI-Powered Red Bar Review
+Automated Clause Review:
+Users upload contracts into the workflow; the AI agent scans and highlights potential Red Bars.
+
+Accurate Identification:
+AI ensures consistent detection of high-risk clauses across all contracts.
+
+Tailored Mitigation Suggestions:
+AI proposes mitigation measures based on the specific services, risks, and obligations.
+
+Faster, Safer Approvals:
+Streamlined reviews reduce human error, improve compliance, and accelerate project delivery.
