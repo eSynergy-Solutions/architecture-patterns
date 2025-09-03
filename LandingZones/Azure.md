@@ -1,3 +1,3 @@
 # Azure
 
-Content coming soon.
+![Azure](./images/landing_zone_comparison-Azure.drawio.png)

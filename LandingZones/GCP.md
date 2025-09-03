@@ -1,3 +1,3 @@
 # GCP
 
-Content coming soon.
+![GCP](./images/landing_zone_comparison-GCP.drawio.png)
