@@ -98,8 +98,8 @@ graph TD
 - DTOs are lightweight and tailored for frontend responses.  
 
 
-## Biz Scenarios
-#### Query Pattern
+## Biz Service Scenarios
+### Query Pattern
 ```mermaid
 sequenceDiagram
     autonumber
@@ -122,7 +122,7 @@ sequenceDiagram
     API-->>User: 200 OK (UsersProfileResponse)
 ```
 
-#### Service Pattern
+### Service Pattern
 ```mermaid
 sequenceDiagram
     autonumber
@@ -150,7 +150,8 @@ sequenceDiagram
 
 Below are two common patterns for how API, Agentic components, and the Biz/Core layers interact.
 
-### Tools pattern (API -> Agent -> Tools -> Service/Query)
+### Tools pattern
+#### 1. API -> Agent -> Tools -> Service/Query
 
 ```mermaid
 sequenceDiagram
@@ -174,7 +175,8 @@ sequenceDiagram
 
 Notes: this pattern keeps agents thin orchestrators that delegate side-effects to tools. Tools should encapsulate retry/error handling and adapt Biz/Query calls as needed.
 
-### Agentic workflow pattern (API -> Workflow -> Service/Query and agents)
+### Agentic workflow pattern
+#### 1. API -> Workflow -> Service/Query and agents
 
 ```mermaid
 sequenceDiagram
