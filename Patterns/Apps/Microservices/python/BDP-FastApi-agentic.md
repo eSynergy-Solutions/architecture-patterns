@@ -11,6 +11,9 @@ The agentic layer is a new additional optional layer.
 ```mermaid
 graph TD
     %% Top-level boxes
+    subgraph MCP["MCP Layer (<code>mcp/</code>)"]
+        DOMAIN_MCP["Domain Service MCPs<br/><code>mcp/</code>"]
+    end
     subgraph API["API Layer (<code>api/</code>)"]
         DOMAIN_APIS["Domain Service APIs<br/><code>api/</code>"]
     end
@@ -27,25 +30,30 @@ graph TD
         WORKFLOW["Workflow<br/><code>agentic/workflow/</code>"]
     end
 
-    MODEL["Model<br/><code>model/</code>"]
-    DATA["Data Layer<br/><code>data/</code>"]
-    DTO["DTOs<br/><code>dto/</code>"]
+    subgraph DATA["Data Layer<br/><code>data/</code>"]
+        DATA_REPO["Data Repo<br/><code>data/repo/</code>"]
+        QUERY_REPO["Query Repo<br/><code>data/query/</code>"]
+    end
 
 
 
 
     %% CORE subgraph groups SCHEMAS/DTO/MODEL/DATA; API/BIZ/AGENTIC point to the group
     subgraph VIRTUALGOUP[" "]
-        DTO["DTOs<br/><code>dto/</code>"]
-        MODEL["Model<br/><code>model/</code>"]
-        DATA["Data Layer<br/><code>data/</code>"]
         CORE["core<br/><code>core/</code>"]
+        MODEL["Model<br/><code>model/</code>"]
+        DTO["DTOs<br/><code>dto/</code>"]
+        
 
     end
 
 
     %% Relationships (simplified using a CORE subgraph)
     %% Agentic relationships
+    MCP --> AGENTIC
+    MCP --> API
+    MCP --> BIZ
+
     AGENTIC --> VIRTUALGOUP
     API --> SCHEMAS
     AGENTIC --> BIZ
@@ -53,10 +61,10 @@ graph TD
     API --> BIZ
 
  
-    BIZ --> DATA
+    SERVICES --> DATA_REPO
     SERVICES --> MODEL
 
-    QUERY --> DATA
+    QUERY --> QUERY_REPO
     QUERY --> DTO
 
     %% Style attempt: dotted border for the subgraph (renderer-dependent)
@@ -78,6 +86,7 @@ graph TD
 | **Data**  | `data/`        | Handles persistence (e.g. repository classes). Accessed only by the biz layer. |
 | **Model** | `model/`       | Contains core domain entities (e.g., User, Status, Token). Used by both api, schemas, and biz. |
 | **Agentic** | `agentic/`   | Encapsulates agent/AI capabilities: agents, RAG/knowledge, tools (MCP), llm adapters, and workflows. Can call Biz and Core Layers. This is only rquired if agentic or agents are used |
+| **MCP (Model Context Protocol)** | `mcp/` | Standardized protocol and schemas that define how agents and tools exchange context, inputs, and outputs; supports tool registration and runtime message exchange. |
 
 ---
 
@@ -99,6 +108,7 @@ graph TD
 | **Core - Config** | `core/config.py` | Application configuration helpers (env loading, typed settings, secrets handling). | `get_settings()` / `Settings` | Config values (dict or Pydantic model) | Used by **API**, **Biz**, **Data**, and **Agentic** layers. |
 | **Core - Custom Logging** | `core/custom_logging.py` | Centralized logging configuration and helpers (structured logging, formatters, request/context enrichment). | `setup_logging()` | Configures root/logger handlers | Used across the application (API startup, background workers). |
 | **Core - Exceptions** | `core/exceptions.py` | Application-specific exception types and mapping utilities for consistent error handling. | `AppError`, `NotFoundError` | Exception classes | Raised by Biz/Data layers and mapped to HTTP responses in API. |
+| **MCP (Model Context Protocol)** | `mcp/` | Standardized protocol and schemas that define how agents and tools exchange context, inputs and outputs (tool registration, tool metadata, and message exchange). | `<Name>MCP` | Tool descriptors, messages, input/output schemas | Used by **agentic/agents**, **agentic/tools** and **agentic/workflow**. |
 ---
 
 ### 🔑 Notes
@@ -174,7 +184,7 @@ sequenceDiagram
 
     User->>API: POST /do-something
     API->>Agent: run_task(payload)
-    Note right of Agent: Agent decides to call a tool (MCP/external)
+    Note right of Agent: Agent decides to call a tool (external)
     Agent->>Tools: invoke_tool(action, params)
     Tools->>Service: perform_action(params)
     Service-->>Tools: result
