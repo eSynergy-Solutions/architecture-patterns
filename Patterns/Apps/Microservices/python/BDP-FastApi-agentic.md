@@ -11,7 +11,9 @@ The agentic layer is a new additional optional layer.
 ```mermaid
 graph TD
     %% Top-level boxes
-    API["API Layer<br/><code>api/</code>"]
+    subgraph API["API Layer (<code>api/</code>)"]
+        DOMAIN_APIS["Domain Service APIs<br/><code>api/</code>"]
+    end
     SCHEMAS["Schemas<br/><code>schemas/</code>"]
     subgraph BIZ["Biz (<code>biz/</code>)"]
         SERVICES["Services<br/><code>services/</code>"]
