@@ -31,12 +31,16 @@ graph TD
 
 
 
+
     %% CORE subgraph groups SCHEMAS/DTO/MODEL/DATA; API/BIZ/AGENTIC point to the group
     subgraph VIRTUALGOUP[" "]
         DTO["DTOs<br/><code>dto/</code>"]
         MODEL["Model<br/><code>model/</code>"]
         DATA["Data Layer<br/><code>data/</code>"]
+        CORE["core<br/><code>core/</code>"]
+
     end
+
 
     %% Relationships (simplified using a CORE subgraph)
     %% Agentic relationships
@@ -66,6 +70,7 @@ graph TD
 |-----------|----------------|-----------------------------------------------------------------------------|
 | **API**   | `api/`         | Exposes FastAPI routes, receives HTTP input, delegates to biz. Uses schemas and models. |
 | **Schemas** | `schemas/`   | Defines Pydantic request/response schemas. Used for input/output validation. Maps to/from domain models. |
+| **Core**  | `core/`        | Shared application utilities and common infrastructure: configuration, custom logging, and exceptions. |
 | **Biz**   | `biz/`         | Contains domain logic. Coordinates workflows, enforces rules. Delegates DB access to data/, uses model/. |
 | **Services** | `biz/services/` | Implements specific business use cases like registration, login, verification. |
 | **Data**  | `data/`        | Handles persistence (e.g. repository classes). Accessed only by the biz layer. |
@@ -78,7 +83,7 @@ graph TD
 
 | Component     | Directory        | Purpose                                                                 | Naming Convention | Returns         | Can Call                                                                                   |
 |---------------|------------------|-------------------------------------------------------------------------|------------------|-----------------|--------------------------------------------------------------------------------------------|
-| **API Layer** | `api/`           | Handles HTTP/gRPC requests, routing, request validation, and response formatting. | `<name>_api`     | Schema Response | Calls **Services**, **Query**. Uses **Schemas** and **Models** (converts requests to models). |
+| **API Layer** | `api/`           | Handles HTTP/gRPC requests, routing, request validation, and response formatting. | `<name>_api` or `<domain-name>_api`    | Schema Response | Calls **Services**, **Query**. Uses **Schemas** and **Models** (converts requests to models). |
 | **Schemas**   | `schemas/`       | Defines request/response DTOs and validation rules.                     | `<Name>Schema`   | `<name>Response` (Pydantic) | —                                                                                          |
 | **Model**     | `model/`         | Core entity definitions, shared across layers.                          | `<Name>Model`    | ORM Entities    | —                                                                                          |
 | **Data Layer**| `data/`          | Data access logic; repositories that talk to the database.              | `<Name>Repository` | ORM / Raw Data  | **Model**                                                                                  |
@@ -89,6 +94,9 @@ graph TD
 | **Agentic - Agents** | `agentic/agents/` | LLM-driven agents that implement task-specific logic and coordinate external calls. | `<Name>Agent` | DTO / Model / Side-effects | Calls **agentic/tools**, **agentic/knowledge**, **biz**, and **core layers** as needed. |
 | **Agentic - Tools**  | `agentic/tools/`  | Tooling and integrations exposed to agents (MCP, external service adapters, action executors). | `<Name>Tool`  | Side-effects / external calls | Called by **agentic/agents** and **agentic/workflow**. |
 | **Agentic - Workflow**| `agentic/workflow/`| Orchestration and composition utilities for agent flows (step sequencing, retries, error handling). | `<Name>Workflow` | Side-effects / DTOs | Calls **agentic/agents**, **agentic/tools**, and **biz** for composed operations. |
+| **Core - Config** | `core/config.py` | Application configuration helpers (env loading, typed settings, secrets handling). | `get_settings()` / `Settings` | Config values (dict or Pydantic model) | Used by **API**, **Biz**, **Data**, and **Agentic** layers. |
+| **Core - Custom Logging** | `core/custom_logging.py` | Centralized logging configuration and helpers (structured logging, formatters, request/context enrichment). | `setup_logging()` | Configures root/logger handlers | Used across the application (API startup, background workers). |
+| **Core - Exceptions** | `core/exceptions.py` | Application-specific exception types and mapping utilities for consistent error handling. | `AppError`, `NotFoundError` | Exception classes | Raised by Biz/Data layers and mapped to HTTP responses in API. |
 ---
 
 ### 🔑 Notes
