@@ -117,7 +117,7 @@ graph TD
 - Services return **Models**, Queries return **DTOs**.  
 - Query services **must not use Models** directly.  
 - DTOs are lightweight and tailored for frontend responses.
-- Naming Conventions only: Used naming convention similar to Derived Query methods for the Repository and QueryRepo method names. Exception find_xx is for returing mulltiple elements and get_xx is for returning single element or NONE.  
+- Data Repo and QueryRepo method naming conventions: Used naming convention similar to Derived Query methods for the Repository and QueryRepo method names. Exception find_xx is for returing mulltiple elements and get_xx is for returning single element or NONE.  
 
 
 ## Biz Service Scenarios
