@@ -97,9 +97,10 @@ graph TD
 | **API Layer** | `api/`           | Handles HTTP/gRPC requests, routing, request validation, and response formatting. | `<name>_api` or `<domain-name>_api`    | Schema Response | Calls **Services**, **Query**. Uses **Schemas** and **Models** (converts requests to models). |
 | **Schemas**   | `schemas/`       | Defines request/response DTOs and validation rules.                     | `<Name>Schema`   | `<name>Response` (Pydantic) | —                                                                                          |
 | **Model**     | `model/`         | Core entity definitions, shared across layers.                          | `<Name>Model`    | ORM Entities    | —                                                                                          |
-| **Data Layer**| `data/`          | Data access logic; repositories that talk to the database.              | `<Name>Repository` | ORM / Raw Data  | **Model**                                                                                  |
-| **Services**  | `biz/services/`  | Core business logic with write/update capabilities.                     | `<Domain-Name>Service` e.g. UsersService  | **Model**       | **Model**, **Data Layer**                                                                  |
-| **Query Services** | `biz/query/`| Read-only aggregation across models and data layer; optimized for frontend responses. | `<Domain-Name>Query` e.g. UsersQuery   | **DTO**         | Calls **Data Layer**, uses **DTO** (⚠️ does not use **Model**)                             |
+| **Data Repo** | `data/repo/`     | Write operations (commands) for data persistence.                        | `<Name>Repository` | ORM / Raw Data  | **Model**                                                                                  |
+| **Query Repo**| `data/query/`    | Read operations (queries) for data retrieval.                            | `<Domain-Name>QueryRepo` | ORM / Raw Data  | **DTO**                                                                                  |
+| **Services**  | `biz/services/`  | Core business logic with write/update capabilities.                     | `<Domain-Name>Service` e.g. UsersService  | **Model**       | **Model**, **Data Repo**                                                                  |
+| **Query Services** | `biz/query/`| Read-only aggregation across models and data layer; optimized for frontend responses. | `<Domain-Name>Query` e.g. UsersQuery   | **DTO**         | Calls **Query Repo**, uses **DTO** (⚠️ does not use **Model**, use **dataClass**)                             |
 | **DTOs**      | `dto/`           | Lightweight data objects optimized for returning to the frontend.        | `<Name>DTO`      | **DTO**         | Used by **Query Services** and **APIs**                                                    |
 | **Agentic**   | `agentic/`       | AI/agent capabilities: orchestrates LLM agents, RAG/knowledge access, tools (MCP), model adapters, and workflows. | `<Name>Agent` / `<Name>Tool` | Varies (DTO/Model/Side-effects) | Can call **Biz**, **Core Layers** (Model, Data, DTO, Schemas) and external systems. |
 | **Agentic - Agents** | `agentic/agents/` | LLM-driven agents that implement task-specific logic and coordinate external calls. | `<Name>Agent` | DTO / Model / Side-effects | Calls **agentic/tools**, **agentic/knowledge**, **biz**, and **core layers** as needed. |
@@ -130,13 +131,14 @@ sequenceDiagram
 
     Note right of API: "e.g. Users API"<br/>api/users_api.py
     Note right of Query: "e.g. UsersQuery"<br/>biz/query/users_query.py
-    Note right of Repo: "e.g. UsersRepository"<br/>data/users_repository.py
+    Note right of Repo: "e.g. UsersQueryRepo"<br/>data/query/users_query_repo.py
 
     User->>API: GET /users/me/profile (Authorization: Bearer <token>)
     API->>Query: get_user_profile(user_id)
     Query->>Repo: fetch_user_by_id(user_id)
     Repo-->>Query: UserRecord (raw DB row)
     Note right of Query: Map raw data → UserProfileDTO<br/>⚠ does not use Model
+    Note over Query: "Naming conventions: find_xx for multiple elements, get_xx for single element or None"
     Query-->>API: UserProfileDTO
     Note over API,Query: API maps DTO → UsersProfileResponse (schema)
     API-->>User: 200 OK (UsersProfileResponse)
