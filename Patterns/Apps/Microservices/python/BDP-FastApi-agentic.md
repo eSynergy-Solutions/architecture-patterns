@@ -116,7 +116,8 @@ graph TD
 - API Layer must **only expose schema responses** (or requests).  
 - Services return **Models**, Queries return **DTOs**.  
 - Query services **must not use Models** directly.  
-- DTOs are lightweight and tailored for frontend responses.  
+- DTOs are lightweight and tailored for frontend responses.
+- Used Derived Query methods for Repository and QueryRepo  
 
 
 ## Biz Service Scenarios
@@ -138,7 +139,7 @@ sequenceDiagram
     Query->>Repo: fetch_user_by_id(user_id)
     Repo-->>Query: UserRecord (raw DB row)
     Note right of Query: Map raw data → UserProfileDTO<br/>⚠ does not use Model
-    Note over Query: "Naming conventions: find_xx for multiple elements, get_xx for single element or None"
+    Note over Query: "Naming conventions: Used derived query methods e.g. find_by_XX for multiple elements, get_by_xx for single element or None"
     Query-->>API: UserProfileDTO
     Note over API,Query: API maps DTO → UsersProfileResponse (schema)
     API-->>User: 200 OK (UsersProfileResponse)
