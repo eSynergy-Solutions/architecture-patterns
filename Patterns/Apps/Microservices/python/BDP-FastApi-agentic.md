@@ -95,7 +95,7 @@ graph TD
 | Component     | Directory        | Purpose                                                                 | Naming Convention | Returns         | Can Call                                                                                   |
 |---------------|------------------|-------------------------------------------------------------------------|------------------|-----------------|--------------------------------------------------------------------------------------------|
 | **API Layer** | `api/`           | Handles HTTP/gRPC requests, routing, request validation, and response formatting. | `<name>_api` or `<domain-name>_api`    | Schema Response | Calls **Services**, **Query**. Uses **Schemas** and **Models** (converts requests to models). |
-| **Schemas**   | `schemas/`       | Defines request/response DTOs and validation rules.                     | `<Name>Schema`   | `<name>Response` (Pydantic) | —                                                                                          |
+| **Schemas**   | `schemas/`       | Defines request/response DTOs and validation rules.                     | `<Model>Request` for requests, `<Model>Response` for responses   | Pydantic schemas | —                                                                                          |
 | **Model**     | `model/`         | Core entity definitions, shared across layers.                          | `<Name>Model`    | ORM Entities    | —                                                                                          |
 | **Data Repo** | `data/repo/`     | Write operations (commands) for data persistence.                        | `<Name>Repository` | ORM / Raw Data  | **Model**                                                                                  |
 | **Query Repo**| `data/query/`    | Read operations (queries) for data retrieval.                            | `<Domain-Name>QueryRepo` | ORM / Raw Data  | **DTO**                                                                                  |
@@ -141,8 +141,8 @@ sequenceDiagram
     Note right of Query: Map raw data → UserProfileDTO<br/>⚠ does not use Model
     Note over Query: "Naming conventions: Used derived query methods e.g. find_by_XX for multiple elements, get_by_xx for single element or None"
     Query-->>API: UserProfileDTO
-    Note over API,Query: API maps DTO → UsersProfileResponse (schema)
-    API-->>User: 200 OK (UsersProfileResponse)
+    Note over API,Query: API maps DTO → UserProfileResponse (schema)
+    API-->>User: 200 OK (UserProfileResponse)
 ```
 
 ### Service Pattern
@@ -158,15 +158,15 @@ sequenceDiagram
     Note right of Service: "UsersService"<br/>biz/services/users_service.py
     Note right of Repo: "UsersRepository"<br/>data/users_repository.py
 
-    User->>API: POST /users/me/register (UserCreateSchema)
-    Note right of API: Validate with Schemas<br/>schemas/users.py
-    API->>Service: register_user(UserCreateSchema)
+    User->>API: POST /users/me/register (CreateUserRequest)
+    Note right of API: Validate with Schemas<br/>schemas/user_schema.py
+    API->>Service: register_user(CreateUserRequest)
     Note over Service: Enforce business rules
     Service->>Repo: create_user(UserModel)
     Repo-->>Service: Persisted UserModel
     Service-->>API: UserModel
-    Note over API,Service: API maps Model → UsersRegisterResponse (schema)
-    API-->>User: 201 Created (UsersRegisterResponse)
+    Note over API,Service: API maps Model → UserResponse (schema)
+    API-->>User: 201 Created (UserResponse)
 ```
 
 ## Agentic interaction patterns
