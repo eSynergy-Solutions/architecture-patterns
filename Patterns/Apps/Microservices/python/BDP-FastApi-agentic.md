@@ -238,8 +238,11 @@ All Models should inherit the base entity attributes.
 classDiagram
     class BaseEntity {
         <<module: model/base/base_entity.py>>
-        +DateTime created_date
-        +DateTime last_updated_date
+        +Timestamp created_at
+        +Timestamp updated_at
+        +Timestamp deleted_at
+        +String created_by
+        +String updated_by
         +Integer lock_version
     }
 
