@@ -240,7 +240,7 @@ classDiagram
         <<module: model/base/base_entity.py>>
         +Timestamp created_at
         +Timestamp updated_at
-        +Timestamp deleted_at
+        +Timestamp deleted_at (default NULL)
         +String created_by
         +String updated_by
         +Integer lock_version
