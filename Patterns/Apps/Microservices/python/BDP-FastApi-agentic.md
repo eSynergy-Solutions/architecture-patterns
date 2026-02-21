@@ -19,6 +19,7 @@ graph TD
     end
     SCHEMAS["Schemas<br/><code>schemas/</code>"]
     subgraph BIZ["Biz (<code>biz/</code>)"]
+        USECASES["Use Cases<br/><code>use_cases/</code>"]
         SERVICES["Services<br/><code>services/</code>"]
         QUERY["Query Services<br/><code>query/</code>"]
     end
@@ -60,7 +61,8 @@ graph TD
     API --> AGENTIC
     API --> BIZ
 
- 
+    USECASES --> SERVICES
+    USECASES --> VIRTUALGOUP
     SERVICES --> DATA_REPO
     SERVICES --> MODEL
 
@@ -81,8 +83,9 @@ graph TD
 | **API**   | `api/`         | Exposes FastAPI routes, receives HTTP input, delegates to biz. Uses schemas and models. |
 | **Schemas** | `schemas/`   | Defines Pydantic request/response schemas. Used for input/output validation. Maps to/from domain models. |
 | **Core**  | `core/`        | Shared application utilities and common infrastructure: configuration, custom logging, and exceptions. |
-| **Biz**   | `biz/`         | Contains domain logic. Coordinates workflows, enforces rules. Delegates DB access to data/, uses model/. |
-| **Services** | `biz/services/` | Implements specific business use cases like registration, login, verification. |
+| **Biz**   | `biz/`         | Contains domain logic and orchestration. Delegates DB access to data/, uses model/. |
+| **Use Cases** | `biz/use_cases/` | Orchestrates multiple services, repos, and external integrations to fulfill a business goal. |
+| **Services** | `biz/services/` | Implements atomic, domain-specific business rules. |
 | **Data**  | `data/`        | Handles persistence (e.g. repository classes). Accessed only by the biz layer. |
 | **Model** | `model/`       | Contains core domain entities (e.g., User, Status, Token). Used by both api, schemas, and biz. |
 | **Agentic** | `agentic/`   | Encapsulates agent/AI capabilities: agents, RAG/knowledge, tools (MCP), llm adapters, and workflows. Can call Biz and Core Layers. This is only rquired if agentic or agents are used |
@@ -94,12 +97,9 @@ graph TD
 
 | Component     | Directory        | Purpose                                                                 | Naming Convention | Returns         | Can Call                                                                                   |
 |---------------|------------------|-------------------------------------------------------------------------|------------------|-----------------|--------------------------------------------------------------------------------------------|
-| **API Layer** | `api/`           | Handles HTTP/gRPC requests, routing, request validation, and response formatting. | `<name>_api` or `<domain-name>_api`    | Schema Response | Calls **Services**, **Query**. Uses **Schemas** and **Models** (converts requests to models). |
-| **Schemas**   | `schemas/`       | Defines request/response DTOs and validation rules.                     | `<Model>Request` for requests, `<Model>Response` for responses   | Pydantic schemas | —                                                                                          |
-| **Model**     | `model/`         | Core entity definitions, shared across layers.                          | `<Name>Model`    | ORM Entities    | —                                                                                          |
-| **Data Repo** | `data/repo/`     | Write operations (commands) for data persistence.                        | `<Name>Repository` | ORM / Raw Data  | **Model**                                                                                  |
-| **Query Repo**| `data/query/`    | Read operations (queries) for data retrieval.                            | `<Domain-Name>QueryRepo` | ORM / Raw Data  | **DTO**                                                                                  |
-| **Services**  | `biz/services/`  | Core business logic with write/update capabilities.                     | `<Domain-Name>Service` e.g. UsersService  | **Model**       | **Model**, **Data Repo**                                                                  |
+| **API Layer** | `api/`           | Handles HTTP/gRPC requests and delegates to **Use Cases** or **Query Services**. | `<name>_api`    | Schema Response | Calls **Use Cases**, **Query Services**. |
+| **Use Cases** | `biz/use_cases/` | Orchestrates multiple domain services and repositories to fulfill a specific business flow/transaction. | `<Name>UseCase` | **Model** / **DTO** | Calls **Services**, **Query Services**, **Repos**. |
+| **Services**  | `biz/services/`  | Atomic, domain-specific business logic and rules.                     | `<Domain-Name>Service`  | **Model**       | **Model**, **Data Repo**                                                                  |
 | **Query Services** | `biz/query/`| Read-only aggregation across models and data layer; optimized for frontend responses. | `<Domain-Name>Query` e.g. UsersQuery   | **DTO**         | Calls **Query Repo**, uses **DTO** (⚠️ does not use **Model**, use **dataClass**)                             |
 | **DTOs**      | `dto/`           | Lightweight data objects optimized for returning to the frontend.        | `<Name>DTO`      | **DTO**         | Used by **Query Services** and **APIs**                                                    |
 | **Agentic**   | `agentic/`       | AI/agent capabilities: orchestrates LLM agents, RAG/knowledge access, tools (MCP), model adapters, and workflows. | `<Name>Agent` / `<Name>Tool` | Varies (DTO/Model/Side-effects) | Can call **Biz**, **Core Layers** (Model, Data, DTO, Schemas) and external systems. |
@@ -143,6 +143,33 @@ sequenceDiagram
     Query-->>API: UserProfileDTO
     Note over API,Query: API maps DTO → UserProfileResponse (schema)
     API-->>User: 200 OK (UserProfileResponse)
+```
+
+### Use Case Pattern (Orchestration)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Caller
+    participant API
+    participant UseCase
+    participant Service
+    participant Repo
+
+    Note right of API: "e.g. Booking API"<br/>api/booking_api.py
+    Note right of UseCase: "e.g. CreateBookingUseCase"<br/>biz/use_cases/create_booking_use_case.py
+    Note right of Service: "e.g. AvailabilityService"<br/>biz/services/availability_service.py
+    Note right of Repo: "e.g. BookingRepository"<br/>data/repo/booking_repo.py
+
+    User->>API: POST /bookings (CreateBookingRequest)
+    API->>UseCase: execute(CreateBookingRequest)
+    Note over UseCase: Orchestrate multiple steps
+    UseCase->>Service: check_availability(details)
+    Service-->>UseCase: is_available
+    UseCase->>Repo: save_booking(details)
+    Repo-->>UseCase: BookingModel
+    UseCase-->>API: BookingModel
+    Note over API,UseCase: API maps Model → CreateBookingResponse
+    API-->>User: 201 Created (CreateBookingResponse)
 ```
 
 ### Service Pattern
