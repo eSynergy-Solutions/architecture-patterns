@@ -84,7 +84,7 @@ graph TD
 | **Schemas** | `schemas/`   | Defines Pydantic request/response schemas. Used for input/output validation. Maps to/from domain models. |
 | **Core**  | `core/`        | Shared application utilities and common infrastructure: configuration, custom logging, and exceptions. |
 | **Biz**   | `biz/`         | Contains domain logic and orchestration. Delegates DB access to data/, uses model/. |
-| **Use Cases** | `biz/use_cases/` | Orchestrates multiple services, repos, and external integrations to fulfill a business goal. |
+| **Use Cases** | `biz/use_cases/` | Orchestrates multiple services, and external integrations to fulfill a business goal. it must hav simple logic and delegate complex logic to services. Must not call data layer directly. |
 | **Services** | `biz/services/` | Implements atomic, domain-specific business rules. |
 | **Data**  | `data/`        | Handles persistence (e.g. repository classes). Accessed only by the biz layer. |
 | **Model** | `model/`       | Contains core domain entities (e.g., User, Status, Token). Used by both api, schemas, and biz. |
