@@ -84,7 +84,7 @@ graph TD
 | **Schemas** | `schemas/`   | Defines Pydantic request/response schemas. Used for input/output validation. Maps to/from domain models. |
 | **Core**  | `core/`        | Shared application utilities and common infrastructure: configuration, custom logging, and exceptions. |
 | **Biz**   | `biz/`         | Contains domain logic and orchestration. Delegates DB access to data/, uses model/. |
-| **Use Cases** | `biz/use_cases/` | Orchestrates multiple services, and external integrations to fulfill a business goal. it must hav simple logic and delegate complex logic to services. Must not call data layer directly. |
+| **Use Cases** | `biz/use_cases/` | Orchestrates multiple services to fulfill a business goal. One class per domain (e.g. `IAMUseCase`), not one class per operation. A method belongs here **only if it coordinates two or more services** — if only one service is needed, the API layer calls that service directly. Must not call the data layer directly. |
 | **Services** | `biz/services/` | Implements atomic, domain-specific business rules. |
 | **Data**  | `data/`        | Handles persistence (e.g. repository classes). Accessed only by the biz layer. |
 | **Model** | `model/`       | Contains core domain entities (e.g., User, Status, Token). Used by both api, schemas, and biz. |
@@ -97,8 +97,8 @@ graph TD
 
 | Component     | Directory        | Purpose                                                                 | Naming Convention | Returns         | Can Call                                                                                   |
 |---------------|------------------|-------------------------------------------------------------------------|------------------|-----------------|--------------------------------------------------------------------------------------------|
-| **API Layer** | `api/`           | Handles HTTP/gRPC requests and delegates to **Use Cases** or **Query Services**. | `<name>_api`    | Schema Response | Calls **Use Cases**, **Query Services**. |
-| **Use Cases** | `biz/use_cases/` | Orchestrates multiple domain services and repositories to fulfill a specific business flow/transaction. | `<Name>UseCase` | **Model** / **DTO** | Calls **Services**, **Query Services**, **Repos**. |
+| **API Layer** | `api/`           | Handles HTTP/gRPC requests and delegates to **Use Cases**, **Services**, or **Query Services**. Calls a **Use Case** when the operation requires multi-service orchestration; calls a **Service** directly when only one service is involved. | `<name>_api`    | Schema Response | Calls **Use Cases**, **Services** (direct), **Query Services**. |
+| **Use Cases** | `biz/use_cases/` | Orchestrates two or more domain services to fulfill a multi-step business flow. One class per domain bounded context (e.g. `IAMUseCase`, `BookingUseCase`). A method is only added when it must coordinate multiple services — single-service operations are handled by the API calling the service directly. | `<Domain>UseCase` | **Model** / **DTO** | Calls **Services**, **Query Services**. Must not call **Repos** directly. |
 | **Services**  | `biz/services/`  | Atomic, domain-specific business logic and rules.                     | `<Domain-Name>Service`  | **Model**       | **Model**, **Data Repo**                                                                  |
 | **Query Services** | `biz/query/`| Read-only aggregation across models and data layer; optimized for frontend responses. | `<Domain-Name>Query` e.g. UsersQuery   | **DTO**         | Calls **Query Repo**, uses **DTO** (⚠️ does not use **Model**, use **dataClass**)                             |
 | **DTOs**      | `dto/`           | Lightweight data objects optimized for returning to the frontend.        | `<Name>DTO`      | **DTO**         | Used by **Query Services** and **APIs**                                                    |
@@ -113,11 +113,13 @@ graph TD
 ---
 
 ### 🔑 Notes
-- API Layer must **only expose schema responses** (or requests).  
-- Services return **Models**, Queries return **DTOs**.  
-- Query services **must not use Models** directly.  
+- API Layer must **only expose schema responses** (or requests).
+- Services return **Models**, Queries return **DTOs**.
+- Query services **must not use Models** directly.
 - DTOs are lightweight and tailored for frontend responses.
-- Data Repo and QueryRepo method naming conventions: Used naming convention similar to Derived Query methods for the Repository and QueryRepo method names. Remember that `find` is for returing mulltiple elements and `get` is for returning single element or NONE.  
+- Data Repo and QueryRepo method naming conventions: Use naming conventions similar to derived query methods. `find` returns multiple elements, `get` returns a single element or `None`.
+- **Use Case rule**: A method belongs in `<Domain>UseCase` **only if it coordinates two or more services**. If an operation calls only one service, the API layer calls that service directly — do not create a Use Case method just for consistency.
+- **Service isolation rule**: Services must **not** import or call other services. Cross-service coordination belongs exclusively in Use Cases. A service that needs another service is a signal that a Use Case method is required.
 
 
 ## Biz Service Scenarios
@@ -145,31 +147,44 @@ sequenceDiagram
     API-->>User: 200 OK (UserProfileResponse)
 ```
 
-### Use Case Pattern (Orchestration)
+### Use Case Pattern (Multi-Service Orchestration)
+
+Use Cases are **only used when an operation must coordinate two or more services**.
+One `<Domain>UseCase` class per bounded context — methods are added only when orchestration is required.
+If an operation calls only one service, the API calls that service directly (see Service Pattern below).
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Caller
     participant API
     participant UseCase
-    participant Service
+    participant ServiceA
+    participant ServiceB
     participant Repo
 
-    Note right of API: "e.g. Booking API"<br/>api/booking_api.py
-    Note right of UseCase: "e.g. CreateBookingUseCase"<br/>biz/use_cases/create_booking_use_case.py
-    Note right of Service: "e.g. AvailabilityService"<br/>biz/services/availability_service.py
-    Note right of Repo: "e.g. BookingRepository"<br/>data/repo/booking_repo.py
+    Note right of API: "e.g. IAM API"<br/>api/iam_api.py
+    Note right of UseCase: "e.g. IAMUseCase.register_merchant()"<br/>biz/use_cases/iam_use_case.py
+    Note right of ServiceA: "e.g. MerchantService"<br/>biz/services/merchant_service.py
+    Note right of ServiceB: "e.g. AuthService"<br/>biz/services/auth_service.py
+    Note right of Repo: "e.g. MerchantRepo"<br/>data/repo/merchant_repo.py
 
-    User->>API: POST /bookings (CreateBookingRequest)
-    API->>UseCase: execute(CreateBookingRequest)
-    Note over UseCase: Orchestrate multiple steps
-    UseCase->>Service: check_availability(details)
-    Service-->>UseCase: is_available
-    UseCase->>Repo: save_booking(details)
-    Repo-->>UseCase: BookingModel
-    UseCase-->>API: BookingModel
-    Note over API,UseCase: API maps Model → CreateBookingResponse
-    API-->>User: 201 Created (CreateBookingResponse)
+    User->>API: POST /merchants/register (RegisterMerchantRequest)
+    API->>UseCase: register_merchant(request)
+    Note over UseCase: Coordinates multiple services — justifies Use Case
+    UseCase->>ServiceA: check_slug_available(slug)
+    ServiceA->>Repo: get_by_slug(slug)
+    Repo-->>ServiceA: None (available)
+    ServiceA-->>UseCase: slug is available
+    UseCase->>ServiceB: provision_firebase_user(email)
+    ServiceB-->>UseCase: firebase_uid
+    UseCase->>ServiceA: create_merchant(name, slug, firebase_uid)
+    ServiceA->>Repo: save(MerchantModel)
+    Repo-->>ServiceA: MerchantModel
+    ServiceA-->>UseCase: MerchantModel
+    UseCase-->>API: MerchantModel
+    Note over API,UseCase: API maps Model → RegisterMerchantResponse (schema)
+    API-->>User: 201 Created (RegisterMerchantResponse)
 ```
 
 ### Service Pattern
