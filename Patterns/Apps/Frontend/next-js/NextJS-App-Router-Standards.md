@@ -166,6 +166,7 @@ classDiagram
         +string id
         +string created_at
         +string updated_at
+        +number lock_version
     }
 
     class ApiResponse {
