@@ -112,6 +112,23 @@ graph TD
 | **MCP (Model Context Protocol)** | `mcp/` | Standardized protocol and schemas that define how agents and tools exchange context, inputs and outputs (tool registration, tool metadata, and message exchange). | `<Name>MCP` | Tool descriptors, messages, input/output schemas | Used by **agentic/agents**, **agentic/tools** and **agentic/workflow**. |
 ---
 
+## 🏛️ Bounded Context Package Organization
+
+As applications grow, top-level directories should be organized into sub-packages named after their respective **Bounded Contexts**. This prevents "God modules" and ensures namespacing clarity.
+
+| Directory | Bounded Context Sub-package | Example Path |
+| :--- | :--- | :--- |
+| `model/` | `model/<context>/` | `model/iam/merchant_entity.py` |
+| `biz/services/` | `biz/services/<context>/` | `biz/services/iam/auth_service.py` |
+| `data/repo/` | `data/repo/<context>/` | `data/repo/iam/merchant_repository.py` |
+| `api/` | `api/<context>/` | `api/iam/staff_api.py` |
+| `schemas/` | `schemas/<context>/` | `schemas/iam/invitation_schema.py` |
+
+> [!IMPORTANT]
+> Always maintain this hierarchy. Shared components (e.g., `BaseEntity`) remain in a `base/` or `shared/` sub-package (e.g., `model/base/base_entity.py`).
+
+---
+
 ### 🔑 Notes
 - API Layer must **only expose schema responses** (or requests).
 - Services return **Models**, Queries return **DTOs**.
