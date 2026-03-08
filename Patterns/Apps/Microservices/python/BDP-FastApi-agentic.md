@@ -120,12 +120,16 @@ As applications grow, top-level directories should be organized into sub-package
 | :--- | :--- | :--- |
 | `model/` | `model/<context>/` | `model/iam/merchant_entity.py` |
 | `biz/services/` | `biz/services/<context>/` | `biz/services/iam/auth_service.py` |
+| `biz/use_cases/` | `biz/use_cases/<context>/` | `biz/use_cases/iam/iam_use_case.py` |
 | `data/repo/` | `data/repo/<context>/` | `data/repo/iam/merchant_repository.py` |
-| `api/` | `api/<context>/` | `api/iam/staff_api.py` |
+| `api/v1/public/` | `api/v1/public/<context>/` | `api/v1/public/iam/staff_api.py` |
 | `schemas/` | `schemas/<context>/` | `schemas/iam/invitation_schema.py` |
 
 > [!IMPORTANT]
 > Always maintain this hierarchy. Shared components (e.g., `BaseEntity`) remain in a `base/` or `shared/` sub-package (e.g., `model/base/base_entity.py`).
+
+> [!NOTE]
+> **API resource sub-folders**: Within a bounded-context folder under `api/v1/public/<context>/`, you **may** create resource-level sub-folders (e.g. `api/v1/public/iam/staff/`) when a context has multiple distinct resource routers. These sub-folders are a routing convenience only — they do **not** alter the bounded-context boundary. Whether to use sub-folders is a team choice, but it must be applied **consistently** across the whole project. Avoid mixing flat and nested styles.
 
 ---
 
