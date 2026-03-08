@@ -141,6 +141,42 @@ As applications grow, top-level directories should be organized into sub-package
 - Data Repo and QueryRepo method naming conventions: Use naming conventions similar to derived query methods. `find` returns multiple elements, `get` returns a single element or `None`.
 - **Use Case rule**: A method belongs in `<Domain>UseCase` **only if it coordinates two or more services**. If an operation calls only one service, the API layer calls that service directly — do not create a Use Case method just for consistency.
 - **Service isolation rule**: Services must **not** import or call other services. Cross-service coordination belongs exclusively in Use Cases. A service that needs another service is a signal that a Use Case method is required.
+- **DB session rule**: The API layer must **never** receive a `db: Session` directly. The session is an infrastructure concern that belongs in the `biz` layer. Use a **service dependency factory** so FastAPI resolves the session inside the service, not in the route handler.
+
+> [!CAUTION]
+> Injecting `db: Session = Depends(get_db)` directly into a route handler is a layering violation. It couples the HTTP layer to your persistence infrastructure and breaks testability.
+
+**✅ Correct — API layer injects a service, not a session:**
+```python
+# Dependency factory: session resolution stays in the biz layer
+def get_staff_service(db: Session = Depends(get_db)) -> StaffMemberService:
+    return StaffMemberService(db)
+
+@router.post("/invitations")
+def invite_staff(
+    request: StaffInvitationRequest,
+    service: StaffMemberService = Depends(get_staff_service),   # ✅ service only
+    merchant_id: UUID = Depends(get_current_tenant_id),
+):
+    return service.invite_staff(...)
+```
+
+**❌ Wrong — API layer directly holds the session:**
+```python
+@router.post("/invitations")
+def invite_staff(
+    request: StaffInvitationRequest,
+    db: Session = Depends(get_db),   # ❌ session in API handler
+    merchant_id: UUID = Depends(get_current_tenant_id),
+):
+    service = StaffMemberService(db)  # manual wiring — breaks test isolation
+    return service.invite_staff(...)
+```
+
+**Testing benefit:** Override the service factory — never `get_db`:
+```python
+app.dependency_overrides[get_staff_service] = lambda: mock_service  # ✅ clean
+```
 
 
 ## Biz Service Scenarios
